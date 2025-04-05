@@ -54,7 +54,7 @@ pipeline {
                 echo "Deploying container..."
                 sh '''
                     # Stop and remove existing container if running
-                    if [ "$(sudo docker ps -q -f name=$CONTAINER_NAME)" ]; then
+                    if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
                         echo "Stopping existing container..."
                         docker stop $CONTAINER_NAME
                         docker rm $CONTAINER_NAME
