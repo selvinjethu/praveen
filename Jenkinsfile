@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-east-2'
-        ECR_REGISTRY = '571600876302.dkr.ecr.us-east-2.amazonaws.com'
+        DOCKER_REGISTRY = '571600876302.dkr.ecr.us-east-2.amazonaws.com'
         IMAGE_NAME = 'praveen'
         REMOTE_USER = 'ubuntu' // Change this to your EC2 username
         REMOTE_HOST = '3.142.133.147' // Change this to your target EC2 instance IP
