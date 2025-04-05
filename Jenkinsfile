@@ -53,7 +53,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    ssh -o StrictHostKeyChecking=no -i $SSH_KEY $REMOTE_USER@$REMOTE_HOST << EOF
+                    ssh -i "praveen.pem" ubuntu@ec2-3-142-133-147.us-east-2.compute.amazonaws.com << EOF
                         export AWS_REGION=$AWS_REGION
                         export DOCKER_REGISTRY=$DOCKER_REGISTRY
                         aws ecr get-login-password --region \$AWS_REGION | docker login --username AWS --password-stdin \$DOCKER_REGISTRY
