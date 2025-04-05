@@ -1,37 +1,89 @@
 pipeline {
     agent any
 
-    tools {
-        jdk 'Java21'  // Make sure this is configured in Jenkins Global Tools
-        maven 'Maven3'  // Assuming Maven is configured in Jenkins
+    environment {
+        IMAGE_NAME = "praveen"
+        AWS_ACCOUNT_ID = "571600876302"
+        AWS_REGION = "us-east-2"
+        DOCKER_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        CONTAINER_NAME = "praveen-container"
     }
 
-    environment {
-        MAVEN_OPTS = "-Xmx1024m"
+    options {
+        timestamps()
+        ansiColor('xterm')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://your-repo-url.git'
+                echo "Cloning repository..."
+                git branch: 'main', url: 'https://github.com/selvinjethu/praveen.git'
             }
         }
 
-        stage('Build') {
+        stage('Build JAR') {
             steps {
+                echo "Building Maven project..."
                 sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Archive Artifact') {
+        stage('Build Docker Image') {
             steps {
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                echo "Building Docker image..."
+                sh '''
+                    docker build -t $DOCKER_REGISTRY/$IMAGE_NAME:latest .
+                '''
+            }
+        }
+
+        stage('Login to AWS ECR') {
+            steps {
+                echo "Logging in to AWS ECR..."
+                sh '''
+                    aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+                '''
+            }
+        }
+
+        stage('Push Docker Image to ECR') {
+            steps {
+                echo "Pushing Docker image to ECR..."
+                sh 'docker push $DOCKER_REGISTRY/$IMAGE_NAME:latest'
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                echo "Deploying container..."
+                sh '''
+                    # Stop and remove existing container if running
+                    if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
+                        echo "Stopping existing container..."
+                        docker stop $CONTAINER_NAME
+                        docker rm $CONTAINER_NAME
+                    fi
+
+                    # Run new container
+                    echo "Starting new container..."
+                    docker run -d --name $CONTAINER_NAME -p 8080:8080 $DOCKER_REGISTRY/$IMAGE_NAME:latest
+
+                    echo "Deployment completed."
+                '''
             }
         }
     }
 
     post {
+        success {
+            echo "✅ Pipeline completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed."
+        }
         always {
+            echo "Cleaning up workspace..."
             cleanWs()
         }
     }
