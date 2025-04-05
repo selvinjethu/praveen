@@ -58,8 +58,20 @@ pipeline {
                         export DOCKER_REGISTRY=$DOCKER_REGISTRY
                         aws ecr get-login-password --region \$AWS_REGION | docker login --username AWS --password-stdin \$DOCKER_REGISTRY
                         sudo docker pull \$DOCKER_REGISTRY/$IMAGE_NAME:latest
-                        sudo docker rm -f * || true
-                        sudo docker run -d --name praveen-container -p 8080:8080 \$DOCKER_REGISTRY/$IMAGE_NAME:latest
+                        if [ "$(docker ps -q -f name=praveen-container)" ]; then
+                            echo "Container is running. Stopping and removing..."
+                            docker stop praveen-container
+                            docker rm praveen-container
+                        elif [ "$(docker ps -aq -f name=praveen-container)" ]; then
+                            echo "Container exists but not running. Removing..."
+                            docker rm praveen-container
+                        else
+                            echo "No container with name praveen-container found."
+                        fi
+                        
+                        # Start new container
+                        docker run -d --name praveen-container your-image-name
+
                     EOF
                     """
                 }
