@@ -2,83 +2,64 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "praveen"
-        AWS_ACCOUNT_ID = "571600876302"
-        AWS_REGION = "us-east-2"
-        DOCKER_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-        CONTAINER_NAME = "praveen-container"
+        AWS_REGION = 'us-east-2'
+        ECR_REGISTRY = '571600876302.dkr.ecr.us-east-2.amazonaws.com'
+        IMAGE_NAME = 'praveen'
+        REMOTE_USER = 'ubuntu' // Change this to your EC2 username
+        REMOTE_HOST = '3.142.133.147' // Change this to your target EC2 instance IP
+        SSH_KEY = '/home/ubuntu/praveen.pem' // Path to private key Jenkins will use
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                echo "Cloning repository..."
-                git branch: 'main', url: 'https://github.com/selvinjethu/praveen.git'
-            }
-        }
-
-        stage('Build JAR') {
-            steps {
-                echo "Building Maven project..."
-                sh 'mvn clean package -DskipTests'
+                checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image..."
-                sh '''
-                    docker build -t $DOCKER_REGISTRY/$IMAGE_NAME:latest .
-                '''
+                script {
+                    docker.build("${ECR_REGISTRY}/${IMAGE_NAME}:latest")
+                }
             }
         }
 
-        stage('Login to AWS ECR') {
+        stage('Push to ECR') {
             steps {
-                echo "Logging in to AWS ECR..."
-                sh '''
-                    aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $DOCKER_REGISTRY
-                '''
+                script {
+                    sh '''
+                        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+                        docker push $ECR_REGISTRY/$IMAGE_NAME:latest
+                    '''
+                }
             }
         }
 
-        stage('Push Docker Image to ECR') {
+        stage('Deploy to Remote Instance') {
             steps {
-                echo "Pushing Docker image to ECR..."
-                sh 'docker push $DOCKER_REGISTRY/$IMAGE_NAME:latest'
-            }
-        }
-
-        stage('Deploy Container') {
-            steps {
-                echo "Deploying container..."
-                sh '''
-                    # Stop and remove existing container if running
-                    if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
-                        echo "Stopping existing container..."
-                        docker stop $CONTAINER_NAME
-                        docker rm $CONTAINER_NAME
-                    fi
-
-                    # Run new container
-                    echo "Starting new container..."
-                    docker run -d --name $CONTAINER_NAME -p 8080:8080 $DOCKER_REGISTRY/$IMAGE_NAME:latest
-
-                    echo "Deployment completed."
-                '''
+                script {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no -i $SSH_KEY $REMOTE_USER@$REMOTE_HOST << 'EOF'
+                        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+                        docker pull $ECR_REGISTRY/$IMAGE_NAME:latest
+                        docker rm -f praveen-container || true
+                        docker run -d --name praveen-container -p 8080:8080 $ECR_REGISTRY/$IMAGE_NAME:latest
+                    EOF
+                    """
+                }
             }
         }
     }
 
     post {
-        success {
-            echo "✅ Pipeline completed successfully!"
-        }
         failure {
             echo "❌ Pipeline failed."
         }
+        success {
+            echo "✅ Deployment successful!"
+        }
         always {
-            echo "Cleaning up workspace..."
             cleanWs()
         }
     }
