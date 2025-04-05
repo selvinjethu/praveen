@@ -11,28 +11,42 @@ pipeline {
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                checkout scm
+                echo "Cloning repository..."
+                git branch: 'main', url: 'https://github.com/selvinjethu/praveen.git'
+            }
+        }
+
+        stage('Build JAR') {
+            steps {
+                echo "Building Maven project..."
+                sh 'mvn clean package -DskipTests'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${ECR_REGISTRY}/${IMAGE_NAME}:latest")
-                }
+                echo "Building Docker image..."
+                sh '''
+                    docker build -t $DOCKER_REGISTRY/$IMAGE_NAME:latest .
+                '''
             }
         }
 
-        stage('Push to ECR') {
+        stage('Login to AWS ECR') {
             steps {
-                script {
-                    sh '''
-                        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-                        docker push $ECR_REGISTRY/$IMAGE_NAME:latest
-                    '''
-                }
+                echo "Logging in to AWS ECR..."
+                sh '''
+                    aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+                '''
+            }
+        }
+
+        stage('Push Docker Image to ECR') {
+            steps {
+                echo "Pushing Docker image to ECR..."
+                sh 'docker push $DOCKER_REGISTRY/$IMAGE_NAME:latest'
             }
         }
 
