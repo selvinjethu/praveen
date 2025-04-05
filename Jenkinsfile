@@ -28,7 +28,7 @@ pipeline {
             steps {
                 echo "Building Docker image..."
                 sh '''
-                    sudo docker build -t $DOCKER_REGISTRY/$IMAGE_NAME:latest .
+                    docker build -t $DOCKER_REGISTRY/$IMAGE_NAME:latest .
                 '''
             }
         }
@@ -56,13 +56,13 @@ pipeline {
                     # Stop and remove existing container if running
                     if [ "$(sudo docker ps -q -f name=$CONTAINER_NAME)" ]; then
                         echo "Stopping existing container..."
-                        sudo docker stop $CONTAINER_NAME
-                        sudo docker rm $CONTAINER_NAME
+                        docker stop $CONTAINER_NAME
+                        docker rm $CONTAINER_NAME
                     fi
 
                     # Run new container
                     echo "Starting new container..."
-                    sudo docker run -d --name $CONTAINER_NAME -p 8080:8080 $DOCKER_REGISTRY/$IMAGE_NAME:latest
+                    docker run -d --name $CONTAINER_NAME -p 8080:8080 $DOCKER_REGISTRY/$IMAGE_NAME:latest
 
                     echo "Deployment completed."
                 '''
