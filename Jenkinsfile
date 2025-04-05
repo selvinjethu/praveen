@@ -55,11 +55,11 @@ pipeline {
                     sh """
                     ssh -o StrictHostKeyChecking=no -i $SSH_KEY $REMOTE_USER@$REMOTE_HOST << EOF
                         export AWS_REGION=$AWS_REGION
-                        export ECR_REGISTRY=$ECR_REGISTRY
-                        aws ecr get-login-password --region \$AWS_REGION | docker login --username AWS --password-stdin \$ECR_REGISTRY
-                        docker pull \$ECR_REGISTRY/$IMAGE_NAME:latest
+                        export DOCKER_REGISTRY=$DOCKER_REGISTRY
+                        aws ecr get-login-password --region \$AWS_REGION | docker login --username AWS --password-stdin \$DOCKER_REGISTRY
+                        docker pull \$DOCKER_REGISTRY/$IMAGE_NAME:latest
                         docker rm -f praveen-container || true
-                        docker run -d --name praveen-container -p 8080:8080 \$ECR_REGISTRY/$IMAGE_NAME:latest
+                        docker run -d --name praveen-container -p 8080:8080 \$DOCKER_REGISTRY/$IMAGE_NAME:latest
                     EOF
                     """
                 }
