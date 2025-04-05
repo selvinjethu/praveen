@@ -9,11 +9,6 @@ pipeline {
         CONTAINER_NAME = "praveen-container"
     }
 
-    options {
-        timestamps()
-        ansiColor('xterm')
-    }
-
     stages {
         stage('Checkout') {
             steps {
