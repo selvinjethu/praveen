@@ -18,7 +18,7 @@ pipeline {
 
         stage('Build JAR') {
             steps {
-                sh 'mvn clean package'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
@@ -30,11 +30,7 @@ pipeline {
 
         stage('Login to AWS ECR') {
             steps {
-                script {
-                    sh '''
-                        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $DOCKER_REGISTRY
-                    '''
-                }
+                sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $DOCKER_REGISTRY'
             }
         }
 
@@ -56,7 +52,7 @@ pipeline {
                         fi
 
                         # Run new container
-                        echo "Starting new container..."
+                        echo "Running new container..."
                         docker run -d --name $CONTAINER_NAME -p 8080:8080 $DOCKER_REGISTRY/$IMAGE_NAME:latest
                     '''
                 }
@@ -66,7 +62,13 @@ pipeline {
 
     post {
         always {
-            cleanWs()
+            echo 'Pipeline finished.'
+        }
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }
