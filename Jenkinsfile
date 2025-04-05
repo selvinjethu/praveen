@@ -57,9 +57,9 @@ pipeline {
                         export AWS_REGION=$AWS_REGION
                         export DOCKER_REGISTRY=$DOCKER_REGISTRY
                         aws ecr get-login-password --region \$AWS_REGION | docker login --username AWS --password-stdin \$DOCKER_REGISTRY
-                        docker pull \$DOCKER_REGISTRY/$IMAGE_NAME:latest
-                        docker rm -f praveen-container || true
-                        docker run -d --name praveen-container -p 8080:8080 \$DOCKER_REGISTRY/$IMAGE_NAME:latest
+                        sudo docker pull \$DOCKER_REGISTRY/$IMAGE_NAME:latest
+                        sudo docker rm -f praveen-container || true
+                        sudo docker run -d --name praveen-container -p 8080:8080 \$DOCKER_REGISTRY/$IMAGE_NAME:latest
                     EOF
                     """
                 }
