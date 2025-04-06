@@ -15,6 +15,6 @@ public class DemoApplication {
 
     @GetMapping("/")
     public String home() {
-        return "Hello, World! 🚀 PRAVEEN App is running.";
+        return "Hello, World! 🚀 Selvin App is running.";
     }
 }
