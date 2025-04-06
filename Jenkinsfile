@@ -6,7 +6,7 @@ pipeline {
         DOCKER_REGISTRY = '571600876302.dkr.ecr.us-east-2.amazonaws.com'
         IMAGE_NAME = 'praveen'
         REMOTE_USER = 'ubuntu' // Change this to your EC2 username
-        REMOTE_HOST = '3.142.133.147' // Change this to your target EC2 instance IP
+        REMOTE_HOST = '18.117.146.159' // Change this to your target EC2 instance IP
         SSH_KEY = '/home/ubuntu/praveen.pem' // Path to private key Jenkins will use
     }
 
