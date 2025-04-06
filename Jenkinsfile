@@ -65,7 +65,7 @@ pipeline {
                     fi
                     
                     # Start new container
-                    docker run -d --name praveen-container your-image-name
+                    docker run -d --name praveen-container $IMAGE_NAME:latest
                     '''
 
                 }
