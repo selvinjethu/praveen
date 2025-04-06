@@ -11,6 +11,8 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jdk-alpine
 
 WORKDIR /app
+RUN ls /app/
+RUN ls /app/target/
 COPY --from=build /app/target/my-web-app-1.0-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
