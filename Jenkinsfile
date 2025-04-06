@@ -66,7 +66,7 @@ pipeline {
                     
                     # Start new container
                     docker pull $DOCKER_REGISTRY/$IMAGE_NAME:latest
-                    docker run -d --name $DOCKER_REGISTRY/$IMAGE_NAME:latest
+                    docker run -d -p 80:8080 --name praveen-container $DOCKER_REGISTRY/$IMAGE_NAME:latest
                     '''
 
                 }
